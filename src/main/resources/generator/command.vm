@@ -1,0 +1,30 @@
+package ${command.commandPkg};
+
+import lombok.Data;
+import java.io.Serializable;
+#foreach( ${field} in ${command.fields} )
+    #set($fieldType = ${field.fieldType})
+    #if($fieldType == "String")
+import java.lang.String;
+    #elseif($fieldType == "Date")
+import java.util.Data;
+    #elseif($fieldType == "Integer")
+import java.lang.Integer;
+    #end
+#end
+
+@Data
+public class ${command.commandName} implements Serializable {
+
+	private static final long serialVersionUID = 1L;
+	
+	#foreach( ${field} in ${command.fields} )
+/**
+     * ${field.fieldCName}
+     * ${field.mark}
+     */
+    private ${field.fieldType} ${field.fieldEName};
+	
+	#end
+
+}

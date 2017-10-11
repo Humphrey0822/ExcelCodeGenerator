@@ -1,0 +1,22 @@
+package ${meta.interfacePkg};
+
+#foreach(${entityPkg} in ${entityPkgs})
+import $entityPkg;
+#end
+
+/**
+ * ${meta.interfaceDes}
+ */
+public interface ${meta.interfaceName} {
+
+    #foreach( ${method} in ${meta.interfaceMethods})
+        #set($command = ${method.command})
+        #set($returnBean = ${method.returnBean})
+        #set($returnBeanName = ${returnBean.returnBeanName})
+        #set($returnBeanVar = $returnBeanName.substring(0,1).toLowerCase() + $returnBeanName.substring(1))
+/**
+     * ${method.methodDes}
+     */
+    public ${command.commandName} ${method.methodName}(${returnBean.returnBeanName} $returnBeanVar);
+    #end
+}

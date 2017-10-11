@@ -1,0 +1,32 @@
+package ${command.commandPkg};
+
+import lombok.Data;
+import java.io.Serializable;
+#foreach( ${field} in ${command.fields} )
+#set($fieldType = ${field.fieldType})
+#if($fieldType == "String")
+import java.lang.String;
+#elseif($fieldType == "Date")
+import java.util.Data;
+#elseif($fieldType == "Integer")
+import java.lang.Integer;
+#elseif($fieldType == "Array")
+import java.util.Map;
+#end
+#end
+
+@Data
+public class ${command.commandName} implements Serializable {
+
+	private static final long serialVersionUID = 1L;
+	
+	#foreach( ${field} in ${command.fields} )
+/**
+     * ${field.fieldCName}
+     * ${field.mark}
+     */
+    private#if(${field.fieldType}=="Int") int#elseif(${field.fieldType}=="Array") Map<String,Object>#else ${field.fieldType}#end ${field.fieldEName};
+
+	#end
+
+}

@@ -48,4 +48,31 @@ public class StringUtil {
     public static String replacePathToPkg(String str) {
         return str.replace("/", ".");
     }
+
+    public static String removeTheEndStr(String str, String str2){
+        if (str.endsWith(str2)){
+            return upperCase(str.substring(0, str.length()-1));
+        }else {
+            return upperCase(str);
+        }
+    }
+
+    /**
+     * 获取泛型对象字符串，比如List<Object>字符串，返回Object
+     * @param str
+     * @return
+     */
+    public static String getGeneratorClassStr(String str){
+        int beginIndex = str.lastIndexOf("<");
+        int endIndex = str.lastIndexOf(">");
+        if (beginIndex != -1 && endIndex != -1){
+            return upperCase(str.substring(beginIndex+1, endIndex));
+        } else {
+            return upperCase(str);
+        }
+    }
+
+//    public static boolean isBaseTypeStr(String str) {
+//        String[] strings = new String[]{"Int","int","Integer","String", "string","Boolean"};
+//    }
 }

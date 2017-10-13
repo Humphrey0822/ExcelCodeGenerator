@@ -1,4 +1,4 @@
-//package com.ouyeel.dto;
+package com.ouyeel.dto;//package com.ouyeel.dto;
 //
 //public class Entity {
 //

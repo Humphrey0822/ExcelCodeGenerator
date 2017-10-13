@@ -46,9 +46,9 @@ public class XCodeService {
         int crtInterfaceCursor = -1;
         int crtMethodCursor = -1;
         int cmdOrRtBeanFlag = -1; // 0-command 1-returnBean
-        int crtFieldCursor = -1;
-        int crtFieldListCursor = -1;
-        int crtFieldListVoCursor = -1;
+        int crtF1Cursor = -1; // F1
+        int crtF2Cursor = -1; // F2
+        int crtF3Cursor = -1; // F3
         //POI 解析excel
         Workbook wb = null;
         try {
@@ -62,6 +62,9 @@ public class XCodeService {
                     InterfaceMethod crtMethod = null;// 接口
                     Command crtCommand = null;// Column A 接口名称
                     ReturnBean crtReturnBean = null;
+                    Field crtF1 = null;
+                    Field crtF2 = null;
+                    Field crtF3 = null;
                     String interfaceName = getCellValueString(row, 0);
                     if (!StringUtil.isEmpty(interfaceName)) {
                         crtInterface = new Interface();
@@ -69,6 +72,7 @@ public class XCodeService {
                         interfaceList.add(crtInterface);
                         crtInterfaceCursor++;
                         crtMethodCursor = -1;
+//                        crt
                     }else {
                         crtInterface = interfaceList.get(crtInterfaceCursor);
                     }
@@ -111,6 +115,7 @@ public class XCodeService {
                             crtReturnBean.setReturnBeanName(StringUtil.upperCase(crtMethod.getMethodName()) + "ReturnBean");
                             cmdOrRtBeanFlag = 1;
                         }
+                        crtF1Cursor = -1;
                     } else {
                         if (cmdOrRtBeanFlag == 0) {
                             crtCommand = crtMethod.getCommand();
@@ -124,37 +129,64 @@ public class XCodeService {
                     String fieldType = getCellValueString(row, 7);
                     String isHas = getCellValueString(row, 8);
                     String mark = getCellValueString(row, 9);
-
-                    Field f1 = null;
+//                    if (crtF1 == null) {
+//                        ArrayList<Field> f2List = new ArrayList<>();
+//                        crtF1.setFields(f2List);
+//                    }
+//                    Field f1 = null;
                     if (!StringUtil.isEmpty(fieldEName) && !StringUtil.isEmpty(fieldType)){
 //                        assert fieldType != null;
                         if (fieldType.equals("JSON")) {
-                            // 如果field 为 List<JSON>类型，则fieldName为方法名，如方法名inquiryQuoteList，则为List<inquiryQuote> inquiryQuoteList
-//                            f1 = new Field(fieldCName,crtMethod.getMethodName(),"List<"+,mark);
+                            if (fieldEName.contains("List")){
+                                // 如果field 为 List<JSON>类型，则fieldName为方法名，如方法名inquiryQuoteList，则为List<InquiryQuoteVo> inquiryQuoteList
+                                crtF1 = new Field(fieldCName,fieldEName,
+                                        delEndListStr(crtMethod.getMethodName(),1)+"Page",isHas,mark);
+                            } else {
+                                crtF1 = new Field(fieldCName, fieldEName, fieldType, isHas, mark);
+//                                crtF1 = new Field(fieldCName,delEndListStr(crtMethod.getMethodName(),0)+"PageList",
+//                                        "List<"+delEndListStr(crtMethod.getMethodName(),1)+  +">",isHas,mark);
+                            }
+                            ArrayList<Field> f2List = new ArrayList<>();
+                            crtF1.setFields(f2List);
+                            crtF1Cursor++;
+
                         }else {
-                            f1 = new Field(fieldCName,fieldEName,fieldType,isHas,mark);
+                            crtF1 = new Field(fieldCName,fieldEName,fieldType,isHas,mark);
+                            crtF1Cursor++;
                         }
-                    }
-                    List<Field> fields = null;
-                    if (cmdOrRtBeanFlag == 0) {
-                        if (crtCommand.getFields() == null) {
-                            fields = new ArrayList<>();
-                            fields.add(f1);
-                            crtFieldCursor++;
-                            crtCommand.setFields(fields);
-                            crtMethod.setCommand(crtCommand);
-                        } else {
-                            crtCommand.getFields().add(f1);
+                        crtF2Cursor = -1;
+                        List<Field> fields = null;
+                        if (cmdOrRtBeanFlag == 0) {
+                            if (crtCommand.getFields() == null) {
+                                fields = new ArrayList<>();
+                                fields.add(crtF1);
+//                            crtF1Cursor++;
+                                crtCommand.setFields(fields);
+                                crtMethod.setCommand(crtCommand);
+                            } else {
+                                crtCommand.getFields().add(crtF1);
+                            }
+                        } else if (cmdOrRtBeanFlag == 1){
+                            if (crtReturnBean.getFields() == null) {
+                                fields = new ArrayList<>();
+                                fields.add(crtF1);
+//                            crtF1Cursor++;
+                                crtReturnBean.setFields(fields);
+                                crtMethod.setReturnBean(crtReturnBean);
+                            } else {
+                                crtReturnBean.getFields().add(crtF1);
+                            }
                         }
-                    } else if (cmdOrRtBeanFlag == 1){
-                        if (crtReturnBean.getFields() == null) {
-                            fields = new ArrayList<>();
-                            fields.add(f1);
-                            crtFieldCursor++;
-                            crtReturnBean.setFields(fields);
-                            crtMethod.setReturnBean(crtReturnBean);
-                        } else {
-                            crtReturnBean.getFields().add(f1);
+                    }else {
+                        if (cmdOrRtBeanFlag == 0) {
+                            crtF1 = crtCommand.getFields().get(crtF1Cursor);
+                        }else if (cmdOrRtBeanFlag == 1) {
+                            try {
+                                crtF1 = crtReturnBean.getFields().get(crtF1Cursor);
+                            } catch (Exception e) {
+                                System.out.println("当去读到表格第" + num + "行抛出异常");
+                                e.printStackTrace();
+                            }
                         }
                     }
 
@@ -163,8 +195,30 @@ public class XCodeService {
                     String fieldListEName = getCellValueString(row, 11);
                     String fieldListType = getCellValueString(row, 12);
                     String fieldListMark = getCellValueString(row, 13);
-                    if (!StringUtil.isEmpty(fieldListEName)){
+//                    Field f2 = null;
+                    if (!StringUtil.isEmpty(fieldListEName)&& !StringUtil.isEmpty(fieldListType)){
+                        if (fieldListType.equals("JSON")) {
 
+                            if (fieldListEName.contains("Lists")){
+                                crtF2 = new Field(fieldListCName,fieldListEName,
+                                        "List<"+delEndListStr(crtMethod.getMethodName(),1)+"Result>",null,fieldListMark);
+                            } else {
+                                crtF2 = new Field(fieldListCName,fieldListEName,
+                                        delEndListStr(crtMethod.getMethodName(),1)+fieldListEName,null,fieldListMark);
+                            }
+                            ArrayList<Field> f3List = new ArrayList<>();
+                            crtF2.setFields(f3List);
+                            crtF2Cursor++;
+                        }else {
+                            crtF2 = new Field(fieldListCName,fieldListEName,fieldListType,null,fieldListMark);
+                            crtF2Cursor++;
+                        }
+                        crtF3Cursor = -1;
+                        crtF1.getFields().add(crtF2);
+                    } else {
+                        if (crtF1 != null && crtF1.getFields() != null) {
+                            crtF2 = crtF1.getFields().get(crtF2Cursor);
+                        }
                     }
 
                     // fieldVoList
@@ -172,6 +226,16 @@ public class XCodeService {
                     String fieldListVoEName = getCellValueString(row, 15);
                     String fieldListVoType = getCellValueString(row, 16);
                     String fieldListVoMark = getCellValueString(row, 17);
+                    if (!StringUtil.isEmpty(fieldListVoEName)&& !StringUtil.isEmpty(fieldListVoType)){
+                        crtF3 = new Field(fieldListVoCName, fieldListVoEName, fieldListVoType, null, fieldListVoMark);
+                        try {
+                            crtF2.getFields().add(crtF3);
+                        } catch (Exception e) {
+                            System.out.println("当去读到表格第" + num + "行抛出异常");
+                            e.printStackTrace();
+                        }
+                    }
+
                 }
             } else {
                 System.out.println("上传表格为空");
@@ -188,9 +252,25 @@ public class XCodeService {
         return interfaceList;
     }
 
-//    public String delEndListStr(String str) {
-//        if ()
-//    }
+    /**
+     * 判断字符串是否以List结尾，如果以List结尾则去除List返回字符串
+     * @param str
+     * @param a 1-首字母大写 0-首字母小写
+     * @return
+     */
+    public String delEndListStr(String str, int a) {
+        int i = str.lastIndexOf("List"); //如果str不以字符串List结尾，则返回-1
+        if (i != -1){
+//            return StringUtil.upperCase(str.substring(0, i));
+            if (a == 1) {
+                return StringUtil.upperCase(str.substring(0, i));
+            } else {
+                return str.substring(0, i);
+            }
+        }else {
+            return StringUtil.upperCase(str);
+        }
+    }
 
     /**
      * 获取某行第i列的值

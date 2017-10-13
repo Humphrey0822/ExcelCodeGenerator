@@ -1,9 +1,6 @@
 package com.ouyeel.utils;
 
-import com.ouyeel.dto.Command;
-import com.ouyeel.dto.Interface;
-import com.ouyeel.dto.InterfaceMethod;
-import com.ouyeel.dto.ReturnBean;
+import com.ouyeel.dto.*;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
@@ -98,6 +95,24 @@ public class XCode {
                     String fileName2 = outPath2 + returnBean.getReturnBeanName() + fileNames[2];
                     writeFiles(template2, velocityContext, fileName2);
                     logger.info("write ReturnBean File: " + fileName2);
+
+                    String outputVoPath = outputPath+"/" + projectPkg.replace(".", fileSeparator) + "/entity/vo/";
+                    String voPkg = projectPkg + "." + StringUtil.replacePathToPkg("entity/vo");
+                    List<Field> fields = returnBean.getFields();
+                    if (fields != null && fields.size() != 0) {
+                        for (Field f1 : fields) {
+                            List<Field> fields2 = f1.getFields();
+                            if (fields2 != null && fields2.size() != 0){
+                                outputEntityFile(velocityContext,outputVoPath,f1,voPkg);
+                                for (Field f2 : fields2) {
+                                    List<Field> fields3 = f2.getFields();
+                                    if (fields3 != null && fields3.size() != 0){
+                                        outputEntityFile(velocityContext,outputVoPath,f2,voPkg);
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
@@ -117,6 +132,31 @@ public class XCode {
             logger.info("write Interface File: " + fileName);
         }
         logger.info("XCode Generator Successful");
+    }
+
+//    public void generatorEntity(List<Field> fields){
+//        if (fields != null && fields.size() != 0){
+//            for (Field field : fields) {
+////            if (f)
+//            }
+//        }
+//    }
+
+    public static void outputEntityFile(VelocityContext velocityContext, String outPath, Field field, String voPkg) throws IOException {
+        String className = StringUtil.getGeneratorClassStr(field.getFieldType());
+        velocityContext = new VelocityContext();
+        velocityContext.put("entity", field);
+        velocityContext.put("className", className);
+        velocityContext.put("voPkg", voPkg);
+        File file = new File(outPath);
+        if (!file.exists()) {
+            file.mkdirs();
+        }
+        Template template = Velocity.getTemplate("templates/vo.vm");
+        template.setEncoding("utf-8");
+        String fileName = outPath + className + ".java";
+        writeFiles(template, velocityContext, fileName);
+        logger.info("Write Entity File: " + fileName);
     }
 
     private static void writeFiles(Template template, VelocityContext context, String fileName) throws IOException {
